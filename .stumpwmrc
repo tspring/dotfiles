@@ -1,0 +1,66 @@
+
+(in-package :stumpwm)
+
+;; change the prefix key to something else
+(set-prefix-key (kbd "C-m"))
+
+;; prompt the user for an interactive command. The first arg is an
+;; optional initial contents.
+(defcommand colon1 (&optional (initial "")) (:rest)
+  (let ((cmd (read-one-line (current-screen) ": " :initial-input initial)))
+    (when cmd
+      (eval-command cmd t))))
+
+
+(define-key *root-map* (kbd "b") "colon1 exec firefox http://www.")
+(define-key *root-map* (kbd "C-s") "colon1 exec xterm -e ssh ")
+
+(defmacro make-web-jump (name prefix)
+  `(defcommand ,(intern name) (search) ((:rest ,(concatenate 'string name " search: ")))
+    (substitute #\+ #\Space search)
+    (run-shell-command (concatenate 'string ,prefix search))))
+
+(make-web-jump "google" "firefox http://www.google.fr/search?q=")
+
+(define-key *root-map* (kbd "M-s") "google")
+(define-key *root-map* (kbd "x") "firefox")
+
+(defcommand firefox () ()
+  "start firefox or switch to it if already running."
+  (run-or-raise "firefox" '(:class "Firefox")))
+
+(define-key *root-map* (kbd "C-h") "hipchat")
+
+(defcommand hipchat () ()
+  "start hipchat or switch to it if already running."
+  (run-or-raise "hipchat" '(:class "HipChat")))
+
+(define-key *root-map* (kbd "m") "geary")
+(defcommand geary () ()
+  "start geary or switch to it if already running."
+  (run-or-raise "geary" '(:class "Geary")))
+
+(define-key *root-map* (kbd "C-E") "eclipse")
+(defcommand eclipse () ()
+  "start geary or switch to it if already running."
+  (run-or-raise "eclipse" '(:class "Eclipse")))
+
+(define-key *root-map* (kbd "c") "terminal")
+(define-key *root-map* (kbd "C-c") "terminal")
+(defcommand terminal () ()
+  "start terminal or switch to it if already running."
+  (run-or-raise "xfce4-terminal" '(:class "Terminal")))
+
+(define-key *root-map* (kbd "M-TAB") "pull-hidden-next")
+
+;; Load swank.
+;; *prefix-key* ; swank will kick this off
+(load "~/.emacs.d/elpa/slime-20160204.1506/swank-loader.lisp")
+(swank-loader:init)
+(defcommand swank () ()
+    (swank:create-server :port 4005
+                       :style swank:*communication-style*
+                       :dont-close t)
+  (echo-string (current-screen)
+	       "Starting swank. M-x slime-connect RET RET, then (in-package stumpwm)."))
+(swank)
